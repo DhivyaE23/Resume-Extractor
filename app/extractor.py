@@ -1,4 +1,6 @@
 import re
+import spacy 
+from skills import SKILLS
 def extract_email(text):
     pattern=r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"
     match=re.search(pattern,text)
@@ -20,5 +22,24 @@ def extract_name(text):
         line = line.strip()
         if line:
             return line
+
+def extract_skills(text):
+    """
+    Extract known technical skills from resume text.
+    """
+
+    nlp = spacy.load("en_core_web_sm")
+
+    doc = nlp(text)
+
+    resume_text = doc.text.lower()
+
+    found_skills = []
+
+    for skill in SKILLS:
+        if skill.lower() in resume_text:
+            found_skills.append(skill)
+
+    return found_skills
 
     return None
