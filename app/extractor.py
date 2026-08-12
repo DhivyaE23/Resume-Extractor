@@ -1,34 +1,72 @@
 import re
-import spacy 
+import spacy
+
 from skills import SKILLS
+
+
+# Load spaCy model once when the application starts
+nlp = spacy.load("en_core_web_sm")
+
+
 def extract_email(text):
-    pattern=r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"
-    match=re.search(pattern,text)
+    """
+    Extract email address from resume text.
+    """
+
+    pattern = r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"
+
+    match = re.search(pattern, text)
+
     return match.group() if match else None
 
+
 def extract_phone(text):
-    pattern=r"(\+?\d{1,3}[- ]?)?\d{10}"
-    match = re.search(pattern,text)
-    return match.group() if match else None
+    """
+    Extract phone number from resume text.
+    """
+
+    patterns = [
+        r"\+91[-\s]?\d{10}",
+        r"\b\d{10}\b",
+        r"\+\d{1,3}[-\s]?\d{7,12}"
+    ]
+
+    for pattern in patterns:
+        match = re.search(pattern, text)
+
+        if match:
+            return match.group()
+
+    return None
+
 
 def extract_name(text):
     """
-    Simple approach:
-    Assume the first non-empty line is the candidate's name.
+    Extract candidate name using spaCy Named Entity Recognition.
     """
+
+    doc = nlp(text)
+
+    for entity in doc.ents:
+        if entity.label_ == "PERSON":
+            return entity.text.strip()
+
+    # Fallback method
     lines = text.split("\n")
 
     for line in lines:
         line = line.strip()
+
         if line:
             return line
+
+    return None
+
 
 def extract_skills(text):
     """
     Extract known technical skills from resume text.
     """
-
-    nlp = spacy.load("en_core_web_sm")
 
     doc = nlp(text)
 
@@ -37,10 +75,14 @@ def extract_skills(text):
     found_skills = []
 
     for skill in SKILLS:
+
         if skill.lower() in resume_text:
+
             found_skills.append(skill)
 
     return found_skills
+
+
 def extract_dates(text):
     """
     Extract common date formats from resume text.
@@ -56,9 +98,15 @@ def extract_dates(text):
     dates = []
 
     for pattern in patterns:
-        matches = re.findall(pattern, text, re.IGNORECASE)
+
+        matches = re.findall(
+            pattern,
+            text,
+            re.IGNORECASE
+        )
 
         for match in matches:
+
             if match not in dates:
                 dates.append(match)
 
@@ -89,6 +137,7 @@ def extract_education(text):
     education = []
 
     for line in text.split("\n"):
+
         line = line.strip()
 
         if not line:
@@ -96,7 +145,11 @@ def extract_education(text):
 
         line_lower = line.lower()
 
-        if any(keyword in line_lower for keyword in education_keywords):
+        if any(
+            keyword in line_lower
+            for keyword in education_keywords
+        ):
+
             education.append(line)
 
     return education
@@ -123,6 +176,7 @@ def extract_experience(text):
     experience = []
 
     for line in text.split("\n"):
+
         line = line.strip()
 
         if not line:
@@ -130,10 +184,34 @@ def extract_experience(text):
 
         line_lower = line.lower()
 
-        if any(keyword in line_lower for keyword in experience_keywords):
+        if any(
+            keyword in line_lower
+            for keyword in experience_keywords
+        ):
+
             experience.append(line)
 
     return experience
 
 
-    return None
+def extract_organizations(text):
+    """
+    Extract organizations such as companies,
+    universities and institutions using spaCy NER.
+    """
+
+    doc = nlp(text)
+
+    organizations = []
+
+    for entity in doc.ents:
+
+        if entity.label_ == "ORG":
+
+            organization = entity.text.strip()
+
+            if organization not in organizations:
+
+                organizations.append(organization)
+
+    return organizations

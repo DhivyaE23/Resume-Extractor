@@ -10,6 +10,7 @@ from extractor import (
     extract_dates,
     extract_education,
     extract_experience,
+    extract_organizations,
 )
 
 from matcher import (
@@ -94,7 +95,8 @@ async def extract_resume(
         "skills": extract_skills(text),
         "education": extract_education(text),
         "experience": extract_experience(text),
-        "dates": extract_dates(text)
+        "dates": extract_dates(text),
+        "organizations": extract_organizations(text)
     }
 
 
