@@ -11,6 +11,14 @@ A Python-based Resume Information Extractor that parses PDF resumes, extracts im
 - Resume Matching with Job Description
 - REST API using FastAPI
 
+## Current Features
+
+- PDF resume text extraction
+- Personal information extraction
+- Skill extraction
+- Resume-job description matching
+- FastAPI REST API
+
 ## Tech Stack
 
 - Python
