@@ -1,5 +1,7 @@
-from fastapi import FastAPI, UploadFile, File,Form
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException
+
 from parser import extract_text_from_pdf
+
 from extractor import (
     extract_name,
     extract_email,
@@ -9,12 +11,36 @@ from extractor import (
     extract_education,
     extract_experience,
 )
-from matcher import extract_job_skills, calculate_match
+
+from matcher import (
+    extract_job_skills,
+    calculate_match,
+)
+
+
 app = FastAPI(
     title="Resume Information Extractor",
-    description="API for extracting information from PDF resumes",
+    description="API for extracting information from PDF resumes and matching them with job descriptions",
     version="1.0.0"
 )
+
+
+def validate_pdf(file: UploadFile):
+    """
+    Validate that the uploaded file is a PDF.
+    """
+
+    if not file.filename:
+        raise HTTPException(
+            status_code=400,
+            detail="No file was uploaded."
+        )
+
+    if not file.filename.lower().endswith(".pdf"):
+        raise HTTPException(
+            status_code=400,
+            detail="Only PDF files are supported."
+        )
 
 
 @app.get("/")
@@ -25,16 +51,41 @@ def home():
 
 
 @app.post("/extract-resume")
-async def extract_resume(file: UploadFile = File(...)):
+async def extract_resume(
+    file: UploadFile = File(...)
+):
+    """
+    Extract information from a PDF resume.
+    """
 
+    # Validate file
+    validate_pdf(file)
+
+    # Save uploaded file
     file_path = f"../resumes/{file.filename}"
 
     with open(file_path, "wb") as buffer:
         content = await file.read()
         buffer.write(content)
 
-    text = extract_text_from_pdf(file_path)
+    # Extract text from PDF
+    try:
+        text = extract_text_from_pdf(file_path)
 
+    except Exception:
+        raise HTTPException(
+            status_code=400,
+            detail="Unable to read the PDF file."
+        )
+
+    # Check if PDF contains text
+    if not text.strip():
+        raise HTTPException(
+            status_code=400,
+            detail="The PDF does not contain readable text."
+        )
+
+    # Extract resume information
     return {
         "filename": file.filename,
         "name": extract_name(text),
@@ -45,24 +96,64 @@ async def extract_resume(file: UploadFile = File(...)):
         "experience": extract_experience(text),
         "dates": extract_dates(text)
     }
+
+
 @app.post("/match-resume")
 async def match_resume(
     file: UploadFile = File(...),
     job_description: str = Form(...)
 ):
+    """
+    Match a resume against a job description.
+    """
 
+    # Validate file
+    validate_pdf(file)
+
+    # Validate job description
+    if not job_description.strip():
+        raise HTTPException(
+            status_code=400,
+            detail="Job description cannot be empty."
+        )
+
+    # Save uploaded file
     file_path = f"../resumes/{file.filename}"
 
     with open(file_path, "wb") as buffer:
         content = await file.read()
         buffer.write(content)
 
-    resume_text = extract_text_from_pdf(file_path)
+    # Extract resume text
+    try:
+        resume_text = extract_text_from_pdf(file_path)
 
+    except Exception:
+        raise HTTPException(
+            status_code=400,
+            detail="Unable to read the PDF file."
+        )
+
+    # Check if PDF contains readable text
+    if not resume_text.strip():
+        raise HTTPException(
+            status_code=400,
+            detail="The PDF does not contain readable text."
+        )
+
+    # Extract skills
     resume_skills = extract_skills(resume_text)
 
     job_skills = extract_job_skills(job_description)
 
+    # Check if job description contains recognizable skills
+    if not job_skills:
+        raise HTTPException(
+            status_code=400,
+            detail="No recognized skills were found in the job description."
+        )
+
+    # Calculate match
     score, matched_skills, missing_skills = calculate_match(
         resume_skills,
         job_skills
