@@ -1,9 +1,11 @@
+import logging
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.concurrency import run_in_threadpool
 
 from app.extractor import (
     extract_dates,
@@ -19,6 +21,7 @@ from app.matcher import calculate_match, extract_job_skills
 from app.parser import extract_text_from_pdf
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="Resume Information Extractor",
@@ -59,7 +62,10 @@ async def get_resume_text(file: UploadFile) -> tuple[str, str]:
     except Exception as exc:
         raise HTTPException(status_code=400, detail="Unable to read the PDF file.") from exc
     finally:
-        file_path.unlink(missing_ok=True)
+        try:
+            file_path.unlink(missing_ok=True)
+        except OSError:
+            logger.exception("Unable to remove temporary resume PDF")
 
     if not text.strip():
         raise HTTPException(
@@ -84,6 +90,33 @@ def get_resume_details(filename: str, text: str) -> dict:
     }
 
 
+def get_match_details(filename: str, resume_text: str, job_description: str) -> dict:
+    resume_skills = extract_skills(resume_text)
+    job_skills = extract_job_skills(job_description)
+
+    if not job_skills:
+        raise HTTPException(status_code=400, detail="No recognized skills were found in the job description.")
+
+    score, matched_skills, missing_skills = calculate_match(resume_skills, job_skills)
+    return {
+        "filename": filename,
+        "match_score": score,
+        "matched_skills": matched_skills,
+        "missing_skills": missing_skills,
+    }
+
+
+def analyze_resume_details(filename: str, text: str, job_description: str) -> dict:
+    result = get_resume_details(filename, text)
+    result.update(get_match_details(filename, text, job_description))
+    return result
+
+
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
+
+
 @app.get("/", response_class=HTMLResponse)
 async def home():
     return FileResponse(BASE_DIR / "templates" / "index.html")
@@ -96,7 +129,7 @@ async def extract_resume(file: UploadFile = File(...)):
     """
 
     filename, text = await get_resume_text(file)
-    return get_resume_details(filename, text)
+    return await run_in_threadpool(get_resume_details, filename, text)
 
 
 @app.post("/match-resume")
@@ -108,22 +141,8 @@ async def match_resume(file: UploadFile = File(...), job_description: str = Form
     if not job_description.strip():
         raise HTTPException(status_code=400, detail="Job description cannot be empty.")
 
-    _, resume_text = await get_resume_text(file)
-
-    resume_skills = extract_skills(resume_text)
-    job_skills = extract_job_skills(job_description)
-
-    if not job_skills:
-        raise HTTPException(status_code=400, detail="No recognized skills were found in the job description.")
-
-    score, matched_skills, missing_skills = calculate_match(resume_skills, job_skills)
-
-    return {
-        "filename": file.filename,
-        "match_score": score,
-        "matched_skills": matched_skills,
-        "missing_skills": missing_skills,
-    }
+    filename, resume_text = await get_resume_text(file)
+    return await run_in_threadpool(get_match_details, filename, resume_text, job_description)
 
 
 @app.post("/analyze-resume")
@@ -132,17 +151,4 @@ async def analyze_resume(file: UploadFile = File(...), job_description: str = Fo
         raise HTTPException(status_code=400, detail="Job description cannot be empty.")
 
     filename, text = await get_resume_text(file)
-    job_skills = extract_job_skills(job_description)
-
-    if not job_skills:
-        raise HTTPException(status_code=400, detail="No recognized skills were found in the job description.")
-
-    resume_skills = extract_skills(text)
-    score, matched_skills, missing_skills = calculate_match(resume_skills, job_skills)
-    result = get_resume_details(filename, text)
-    result.update({
-        "match_score": score,
-        "matched_skills": matched_skills,
-        "missing_skills": missing_skills,
-    })
-    return result
+    return await run_in_threadpool(analyze_resume_details, filename, text, job_description)

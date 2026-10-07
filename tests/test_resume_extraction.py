@@ -30,6 +30,19 @@ class ResumeApiTests(unittest.TestCase):
 
         return asyncio.run(send_request())
 
+    def get(self, path):
+        async def send_request():
+            transport = httpx.ASGITransport(app=app)
+            async with httpx.AsyncClient(transport=transport, base_url="http://testserver") as client:
+                return await client.get(path)
+
+        return asyncio.run(send_request())
+
+    def test_health_endpoint_reports_ready(self):
+        response = self.get("/health")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {"status": "ok"})
+
     def test_analyze_endpoint_returns_extraction_and_match_in_one_response(self):
         pdf_path = Path(__file__).resolve().parents[1] / "resumes" / "professional_resume.pdf"
         response = self.post(

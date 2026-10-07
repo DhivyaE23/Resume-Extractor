@@ -1,0 +1,14 @@
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+.env
+.env.*
+.idea/
+.vscode/
+.pytest_cache/
+.coverage
+dist/
+build/
+resumes/*.pdf
+job_description.txt
