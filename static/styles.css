@@ -91,8 +91,10 @@ textarea:focus, input:focus-visible, button:focus-visible, a:focus-visible, .upl
 .skill-tag { padding: 4px 8px; border: 1px solid #d8e5d5; background: var(--green-pale); color: #315d43; font-size: .78rem; }
 .missing-group .skill-tag { border-color: #ead9ce; background: #f8f0ea; color: #8a512f; }
 .empty-note { color: #858d83; font-size: .81rem; }
-.evidence-list { display: grid; gap: 9px; margin-top: 12px; }
-.evidence-item { padding: 9px 10px; border-left: 2px solid #a9c4a6; background: #f4f7f1; }
+.evidence-disclosure { margin-top: 10px; color: var(--muted); font-size: .78rem; }
+.evidence-disclosure summary { width: fit-content; color: var(--green); cursor: pointer; font-weight: 650; }
+.evidence-list { display: grid; gap: 9px; margin-top: 10px; }
+.evidence-item { padding: 8px 10px; border-left: 2px solid #a9c4a6; background: #f4f7f1; }
 .evidence-item strong { display: block; margin-bottom: 3px; color: var(--green-dark); font-size: .76rem; }
 .evidence-item p { margin: 0; color: #586258; font-size: .78rem; line-height: 1.45; overflow-wrap: anywhere; }
 .candidate-section { margin-top: 40px; }
