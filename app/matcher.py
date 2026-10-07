@@ -1,4 +1,4 @@
-from skills import SKILLS
+from .skills import find_skills
 
 
 def extract_job_skills(job_description):
@@ -6,15 +6,7 @@ def extract_job_skills(job_description):
     Extract known skills from the job description.
     """
 
-    job_text = job_description.lower()
-
-    found_skills = []
-
-    for skill in SKILLS:
-        if skill.lower() in job_text:
-            found_skills.append(skill)
-
-    return found_skills
+    return find_skills(job_description)
 
 
 def calculate_match(resume_skills, job_skills):

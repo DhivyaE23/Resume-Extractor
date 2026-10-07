@@ -1,54 +1,60 @@
-"""PDF parser module for extracting text from PDF resumes."""
-
-import logging
+import re
+import shutil
 from pathlib import Path
 
+import pymupdf
 from PyPDF2 import PdfReader
-from PyPDF2.errors import PdfReadError
 
-logger = logging.getLogger(__name__)
+
+def normalize_resume_text(text: str) -> str:
+    text = text.replace("\ufffd", " ").replace("\u00ad", "")
+    text = re.sub(r"(?<=\w)-\s*\n\s*(?=\w)", "", text)
+    lines = [re.sub(r"[ \t]+", " ", line).strip() for line in text.splitlines()]
+    return "\n".join(line for line in lines if line)
+
+
+def _extract_with_pypdf(pdf_path: str) -> str:
+    path = Path(pdf_path)
+    if not path.exists():
+        raise FileNotFoundError(f"PDF file not found: {pdf_path}")
+    if path.suffix.lower() != ".pdf":
+        raise ValueError(f"File must be a PDF. Got: {path.suffix}")
+
+    reader = PdfReader(str(path))
+    if not reader.pages:
+        raise ValueError("PDF file contains no pages.")
+    return "\n\n".join(page.extract_text() or "" for page in reader.pages)
 
 
 def extract_text_from_pdf(pdf_path: str) -> str:
-    """Extract text from a PDF file with validation and error handling."""
-    path = Path(pdf_path)
-
-    if not path.exists():
-        logger.error(f"PDF file not found: {pdf_path}")
-        raise FileNotFoundError(f"PDF file not found: {pdf_path}")
-
-    if path.suffix.lower() != ".pdf":
-        logger.error(f"Invalid file type: {path.suffix}")
-        raise ValueError(f"File must be a PDF. Got: {path.suffix}")
-
-    text = ""
-
     try:
-        reader = PdfReader(str(path))
+        path = Path(pdf_path)
+        if not path.exists():
+            raise FileNotFoundError(f"PDF file not found: {pdf_path}")
+        if path.suffix.lower() != ".pdf":
+            raise ValueError(f"File must be a PDF. Got: {path.suffix}")
 
-        if len(reader.pages) == 0:
-            logger.warning(f"PDF has no pages: {pdf_path}")
-            raise ValueError("PDF file contains no pages.")
+        with pymupdf.open(str(path)) as document:
+            if document.page_count == 0:
+                raise ValueError("PDF file contains no pages.")
 
-        for page_num, page in enumerate(reader.pages, 1):
-            try:
-                extracted = page.extract_text()
-                if extracted:
-                    text += extracted + "\n"
-            except Exception as exc:
-                logger.warning(f"Failed to extract text from page {page_num}: {str(exc)}")
-                continue
+            page_texts = []
+            tesseract_available = shutil.which("tesseract") is not None
 
-        if not text.strip():
-            logger.warning(f"No readable text found in PDF: {pdf_path}")
-            raise ValueError("PDF does not contain readable text.")
+            for page in document:
+                page_text = page.get_text("text", sort=True)
+                if not page_text.strip() and tesseract_available:
+                    try:
+                        text_page = page.get_textpage_ocr(language="eng", dpi=300, full=True)
+                        page_text = page.get_text("text", textpage=text_page, sort=True)
+                    except (OSError, RuntimeError, ValueError):
+                        page_text = ""
+                page_texts.append(page_text)
 
-        logger.info(f"Successfully extracted text from {pdf_path}")
-        return text
+        text = normalize_resume_text("\n\n".join(page_texts))
+        if text:
+            return text
+    except (pymupdf.FileDataError, OSError):
+        return normalize_resume_text(_extract_with_pypdf(pdf_path))
 
-    except PdfReadError as exc:
-        logger.error(f"PDF read error: {str(exc)}")
-        raise ValueError(f"Failed to read PDF file: {str(exc)}") from exc
-    except IOError as exc:
-        logger.error(f"IO error reading PDF: {str(exc)}")
-        raise IOError(f"Error reading PDF file: {str(exc)}") from exc
+    return normalize_resume_text(_extract_with_pypdf(pdf_path))

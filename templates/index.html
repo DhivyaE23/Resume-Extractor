@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Resume Extractor</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="topbar">
+        <a class="brand" href="#top" aria-label="CV Desk home">
+          <span class="brand-mark" aria-hidden="true">CV</span>
+          <span>CV <b>Desk</b></span>
+        </a>
+        <nav aria-label="Main navigation">
+          <a class="nav-link current" href="#workspace">Review resume</a>
+          <a class="nav-link" href="#candidate">Candidate profile</a>
+        </nav>
+        <span class="privacy-note"><span class="privacy-dot"></span> Resume files are not retained</span>
+      </header>
+
+      <main id="top">
+        <section class="intro">
+          <div>
+            <p class="eyebrow">Resume review</p>
+            <h1>A clearer first look<br />at every candidate.</h1>
+            <p class="intro-copy">Extract the details that matter, then compare skills against the role you’re hiring for.</p>
+          </div>
+          <a class="text-link" href="#workspace">Start a review <span aria-hidden="true">↓</span></a>
+        </section>
+
+        <section class="workspace" id="workspace" aria-label="Resume review workspace">
+          <div class="workspace-heading">
+            <div>
+              <p class="eyebrow">New review</p>
+              <h2>Role requirements</h2>
+            </div>
+            <button class="text-button" id="templateBtn" type="button">Load sample role</button>
+          </div>
+
+          <div class="workspace-grid">
+            <section class="input-column" aria-labelledby="roleLabel">
+              <label id="roleLabel" class="field-label" for="jobDescription">Job description</label>
+              <textarea id="jobDescription" rows="10" placeholder="Paste the role description. Include the skills and experience you want to compare."></textarea>
+              <div class="upload-area" id="dropZone">
+                <input id="resumeFile" type="file" accept=".pdf,application/pdf" />
+                <span class="upload-symbol" aria-hidden="true">↑</span>
+                <div class="upload-copy">
+                  <label for="resumeFile" class="upload-link">Choose a PDF resume</label>
+                  <span> or drop it here</span>
+                  <p id="fileName">PDF only, up to 10 MB</p>
+                </div>
+              </div>
+              <div class="form-actions">
+                <button class="analyze-button" id="analyzeBtn" type="button">
+                  <span id="buttonLabel">Analyze resume</span><span aria-hidden="true">→</span>
+                </button>
+                <p class="form-hint">Your resume is used only to create this review.</p>
+              </div>
+              <p class="message" id="message" role="alert" aria-live="polite" hidden></p>
+            </section>
+
+            <aside class="match-column" aria-labelledby="matchHeading">
+              <div class="match-heading">
+                <div>
+                  <p class="eyebrow">Role alignment</p>
+                  <h3 id="matchHeading">Skill match</h3>
+                </div>
+                <span class="score" id="matchScoreValue">—<small>%</small></span>
+              </div>
+              <div class="score-track" aria-hidden="true"><span id="scoreBar"></span></div>
+              <p class="match-summary" id="matchSummary">Add a role description and resume to see the overlap.</p>
+              <div class="skill-group">
+                <h4>Matched skills <span id="matchedCount">0</span></h4>
+                <div id="matchedSkills" class="skill-list"><span class="empty-note">No review yet</span></div>
+              </div>
+              <div class="skill-group missing-group">
+                <h4>Skills to explore <span id="missingCount">0</span></h4>
+                <div id="missingSkills" class="skill-list"><span class="empty-note">No review yet</span></div>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <section class="candidate-section" id="candidate" aria-labelledby="candidateHeading">
+          <div class="candidate-title">
+            <div>
+              <p class="eyebrow">Extracted information</p>
+              <h2 id="candidateHeading">Candidate profile</h2>
+            </div>
+            <span class="file-status" id="resultStatus">Awaiting resume</span>
+          </div>
+          <p class="candidate-file" id="resultFilename">Upload a PDF to populate this profile.</p>
+          <dl class="details-grid">
+            <div><dt>Name</dt><dd id="resultName">—</dd></div>
+            <div><dt>Email</dt><dd id="resultEmail">—</dd></div>
+            <div><dt>Phone</dt><dd id="resultPhone">—</dd></div>
+            <div><dt>Dates found</dt><dd id="resultDates">—</dd></div>
+          </dl>
+          <div class="profile-columns">
+            <section class="profile-block">
+              <h3>Skills</h3>
+              <div id="resultSkills" class="skill-list"><span class="empty-note">Waiting for a resume</span></div>
+            </section>
+            <section class="profile-block">
+              <h3>Experience</h3>
+              <ul id="resultExperience" class="detail-list"><li>Waiting for a resume</li></ul>
+            </section>
+            <section class="profile-block">
+              <h3>Education</h3>
+              <ul id="resultEducation" class="detail-list"><li>Waiting for a resume</li></ul>
+            </section>
+            <section class="profile-block">
+              <h3>Organizations</h3>
+              <ul id="resultOrganizations" class="detail-list"><li>Waiting for a resume</li></ul>
+            </section>
+          </div>
+        </section>
+      </main>
+      <footer><span>CV Desk</span><span>Resume details are extracted automatically. Review them before making decisions.</span></footer>
+    </div>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>
