@@ -20,12 +20,14 @@ For image-only scanned PDFs, OCR is attempted only when Tesseract is installed a
 ## Features
 
 - Light-theme responsive web interface for resume review
+- Editable job-description starters for software engineering, frontend, backend/API, data analytics, machine learning, cloud/DevOps, and database engineering
 - PDF text extraction with layout-aware ordering and a fallback reader
 - Candidate name, email address, and phone number extraction
 - Technical skill detection with token boundaries and common aliases such as HTML5/HTML and CSS3/CSS
 - Education and experience extraction guided by resume section headings
 - Organization and date extraction
 - Skill matching against a pasted job description
+- Domain starter descriptions can be loaded into the job-description editor and customized before analysis
 - Standalone extraction and matching APIs, plus a combined analysis endpoint
 - 10 MB server-side upload limit and temporary-file cleanup
 - `/health` endpoint for hosting-provider health checks

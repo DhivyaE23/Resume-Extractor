@@ -4,9 +4,32 @@ const jobDescription = document.getElementById('jobDescription');
 const message = document.getElementById('message');
 const fileName = document.getElementById('fileName');
 const dropZone = document.getElementById('dropZone');
-const templateButton = document.getElementById('templateBtn');
+const rolePreset = document.getElementById('rolePreset');
+const loadRoleButton = document.getElementById('loadRoleBtn');
 
-const sampleDescription = 'We are looking for a Python developer with experience in FastAPI, SQL, Docker, AWS, and machine learning. Candidates should be comfortable with API design, cloud deployment, and collaborating with product teams.';
+const roleDescriptions = {
+  'software-engineer': `We are looking for a Software Engineer to build and maintain reliable applications. You will work with a team to design features, write clear code, review changes, and troubleshoot issues.
+
+Relevant skills: Python, Java, C++, JavaScript, SQL, Git, GitHub, Linux.`,
+  'frontend-developer': `We are looking for a Frontend Developer to build responsive, accessible web experiences. You will work with design and backend teammates to implement interfaces and improve usability.
+
+Relevant skills: HTML, CSS, JavaScript, TypeScript, React, Angular, Next.js, Git, GitHub.`,
+  'backend-developer': `We are looking for a Backend Developer to build APIs and services, work with databases, and help maintain dependable applications.
+
+Relevant skills: Python, Java, Node.js, Express.js, FastAPI, Flask, Django, REST API, SQL, PostgreSQL, MongoDB, Redis, Docker.`,
+  'data-analyst': `We are looking for a Data Analyst to prepare datasets, answer business questions, and communicate findings through reports and dashboards.
+
+Relevant skills: SQL, Python, Excel, Power BI, Tableau, Power Query, DAX, Pandas, NumPy, Matplotlib, Seaborn, Data Analytics.`,
+  'machine-learning': `We are looking for an entry-level Machine Learning practitioner to prepare data, build experiments, evaluate models, and explain results to teammates.
+
+Relevant skills: Python, SQL, Machine Learning, Deep Learning, Artificial Intelligence, Data Science, Scikit-learn, TensorFlow, PyTorch, Pandas, NumPy, Matplotlib.`,
+  'cloud-devops': `We are looking for a Cloud and DevOps Engineer to support deployments, automate repeatable tasks, and help operate reliable cloud services.
+
+Relevant skills: AWS, Azure, Linux, Docker, Kubernetes, Terraform, Git, GitHub Actions, Python.`,
+  'database-engineer': `We are looking for a Database Engineer to design, query, and maintain data stores, support application teams, and improve data reliability.
+
+Relevant skills: SQL, PostgreSQL, MySQL, MongoDB, Redis, Python, Linux, AWS, Azure.`
+};
 
 function renderValues(container, values, className, emptyText) {
   container.replaceChildren();
@@ -62,9 +85,17 @@ fileInput.addEventListener('change', () => {
   updateFile(file);
 });
 
-templateButton.addEventListener('click', () => {
-  jobDescription.value = sampleDescription;
+loadRoleButton.addEventListener('click', () => {
+  const description = roleDescriptions[rolePreset.value];
+  if (!description) {
+    showMessage('Choose a career domain to load its job-description starter.');
+    rolePreset.focus();
+    return;
+  }
+  jobDescription.value = description;
+  showMessage('');
   jobDescription.focus();
+  jobDescription.setSelectionRange(jobDescription.value.length, jobDescription.value.length);
 });
 
 ['dragenter', 'dragover'].forEach((eventName) => {

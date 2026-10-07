@@ -36,13 +36,27 @@
               <p class="eyebrow">New review</p>
               <h2>Role requirements</h2>
             </div>
-            <button class="text-button" id="templateBtn" type="button">Load sample role</button>
+            <div class="role-picker">
+              <label class="visually-hidden" for="rolePreset">Choose a career domain</label>
+              <select id="rolePreset">
+                <option value="">Choose a domain</option>
+                <option value="software-engineer">Software engineering</option>
+                <option value="frontend-developer">Frontend development</option>
+                <option value="backend-developer">Backend and APIs</option>
+                <option value="data-analyst">Data analytics</option>
+                <option value="machine-learning">Machine learning</option>
+                <option value="cloud-devops">Cloud and DevOps</option>
+                <option value="database-engineer">Database engineering</option>
+              </select>
+              <button class="text-button" id="loadRoleBtn" type="button">Load job description</button>
+            </div>
           </div>
 
           <div class="workspace-grid">
             <section class="input-column" aria-labelledby="roleLabel">
               <label id="roleLabel" class="field-label" for="jobDescription">Job description</label>
-              <textarea id="jobDescription" rows="10" placeholder="Paste the role description. Include the skills and experience you want to compare."></textarea>
+              <textarea id="jobDescription" rows="10" placeholder="Paste a job description or choose a domain starter above. You can edit the text before analyzing."></textarea>
+              <p class="role-hint">Domain descriptions are editable examples. Matching uses the technical skills recognized by this app.</p>
               <div class="upload-area" id="dropZone">
                 <input id="resumeFile" type="file" accept=".pdf,application/pdf" />
                 <span class="upload-symbol" aria-hidden="true">↑</span>
