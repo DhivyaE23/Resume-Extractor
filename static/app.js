@@ -25,6 +25,28 @@ function renderValues(container, values, className, emptyText) {
   });
 }
 
+function renderEvidence(container, evidence) {
+  container.replaceChildren();
+  if (!evidence?.length) {
+    const empty = document.createElement('p');
+    empty.className = 'empty-note';
+    empty.textContent = 'No supporting resume lines found.';
+    container.append(empty);
+    return;
+  }
+
+  evidence.forEach(({ skill, excerpt }) => {
+    const item = document.createElement('article');
+    item.className = 'evidence-item';
+    const label = document.createElement('strong');
+    label.textContent = skill;
+    const quote = document.createElement('p');
+    quote.textContent = excerpt;
+    item.append(label, quote);
+    container.append(item);
+  });
+}
+
 function showMessage(text = '') {
   message.textContent = text;
   message.hidden = !text;
@@ -85,6 +107,7 @@ function renderDetails(data) {
   renderValues(document.getElementById('resultOrganizations'), data.organizations, '', 'No organizations found');
   renderValues(document.getElementById('matchedSkills'), data.matched_skills, 'skill-tag', 'No matching skills found');
   renderValues(document.getElementById('missingSkills'), data.missing_skills, 'skill-tag', 'No uncovered role skills');
+  renderEvidence(document.getElementById('matchEvidence'), data.matched_skill_evidence);
 
   const score = Math.max(0, Math.min(100, Number(data.match_score) || 0));
   document.getElementById('matchScoreValue').innerHTML = `${score}<small>%</small>`;

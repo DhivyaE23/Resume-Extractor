@@ -17,7 +17,7 @@ from app.extractor import (
     extract_phone,
     extract_skills,
 )
-from app.matcher import calculate_match, extract_job_skills
+from app.matcher import calculate_match, extract_job_skills, find_skill_evidence
 from app.parser import extract_text_from_pdf
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -102,6 +102,7 @@ def get_match_details(filename: str, resume_text: str, job_description: str) -> 
         "filename": filename,
         "match_score": score,
         "matched_skills": matched_skills,
+        "matched_skill_evidence": find_skill_evidence(resume_text, matched_skills),
         "missing_skills": missing_skills,
     }
 

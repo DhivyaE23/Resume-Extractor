@@ -16,7 +16,7 @@ from app.extractor import (
     extract_skills,
 )
 from app.main import MAX_RESUME_SIZE, app
-from app.matcher import calculate_match
+from app.matcher import calculate_match, find_skill_evidence
 from app.parser import extract_text_from_pdf
 from app.skills import find_skills
 
@@ -59,6 +59,12 @@ class ResumeApiTests(unittest.TestCase):
         self.assertEqual(result["matched_skills"], ["Python", "PostgreSQL", "Kubernetes"])
         self.assertEqual(result["missing_skills"], ["C++"])
         self.assertEqual(result["match_score"], 75.0)
+        evidence_by_skill = {
+            item["skill"]: item["excerpt"] for item in result["matched_skill_evidence"]
+        }
+        self.assertIn("Python", evidence_by_skill)
+        self.assertIn("Python", evidence_by_skill["Python"])
+        self.assertIn("Kubernetes", evidence_by_skill["Kubernetes"])
 
     def test_analyze_endpoint_rejects_non_pdf_upload(self):
         response = self.post(
@@ -101,6 +107,19 @@ class ResumeApiTests(unittest.TestCase):
 
 
 class ResumeExtractionTests(unittest.TestCase):
+    def test_match_evidence_returns_source_line_and_normalizes_alias(self):
+        evidence = find_skill_evidence(
+            "Skills: HTML5, CSS3\nBuilt accessible pages with HTML5 and CSS3.",
+            ["HTML", "CSS"],
+        )
+        self.assertEqual(
+            evidence,
+            [
+                {"skill": "HTML", "excerpt": "Skills: HTML5, CSS3"},
+                {"skill": "CSS", "excerpt": "Skills: HTML5, CSS3"},
+            ],
+        )
+
     def test_layout_extraction_preserves_contact_line_separation(self):
         document = pymupdf.open()
         page = document.new_page()
