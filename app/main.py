@@ -30,7 +30,8 @@ app = FastAPI(
 )
 
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
-MAX_RESUME_SIZE = 10 * 1024 * 1024
+MAX_RESUME_SIZE = 4 * 1024 * 1024
+MAX_JOB_DESCRIPTION_SIZE = 64 * 1024
 
 
 def validate_pdf(file: UploadFile):
@@ -51,7 +52,7 @@ async def get_resume_text(file: UploadFile) -> tuple[str, str]:
 
     content = await file.read(MAX_RESUME_SIZE + 1)
     if len(content) > MAX_RESUME_SIZE:
-        raise HTTPException(status_code=413, detail="Resume PDF must be 10 MB or smaller.")
+        raise HTTPException(status_code=413, detail="Resume PDF must be 4 MB or smaller.")
 
     with NamedTemporaryFile(suffix=".pdf", delete=False) as buffer:
         buffer.write(content)
@@ -88,6 +89,13 @@ def get_resume_details(filename: str, text: str) -> dict:
         "dates": extract_dates(text),
         "organizations": extract_organizations(text),
     }
+
+
+def validate_job_description(job_description: str) -> None:
+    if not job_description.strip():
+        raise HTTPException(status_code=400, detail="Job description cannot be empty.")
+    if len(job_description.encode("utf-8")) > MAX_JOB_DESCRIPTION_SIZE:
+        raise HTTPException(status_code=413, detail="Job description must be 64 KB or smaller.")
 
 
 def get_match_details(filename: str, resume_text: str, job_description: str) -> dict:
@@ -139,8 +147,7 @@ async def match_resume(file: UploadFile = File(...), job_description: str = Form
     Match a resume against a job description.
     """
 
-    if not job_description.strip():
-        raise HTTPException(status_code=400, detail="Job description cannot be empty.")
+    validate_job_description(job_description)
 
     filename, resume_text = await get_resume_text(file)
     return await run_in_threadpool(get_match_details, filename, resume_text, job_description)
@@ -148,8 +155,7 @@ async def match_resume(file: UploadFile = File(...), job_description: str = Form
 
 @app.post("/analyze-resume")
 async def analyze_resume(file: UploadFile = File(...), job_description: str = Form(...)):
-    if not job_description.strip():
-        raise HTTPException(status_code=400, detail="Job description cannot be empty.")
+    validate_job_description(job_description)
 
     filename, text = await get_resume_text(file)
     return await run_in_threadpool(analyze_resume_details, filename, text, job_description)

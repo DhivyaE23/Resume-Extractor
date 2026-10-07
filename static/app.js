@@ -76,7 +76,7 @@ function showMessage(text = '') {
 }
 
 function updateFile(file) {
-  fileName.textContent = file ? `${file.name} · ${(file.size / 1024 / 1024).toFixed(1)} MB` : 'PDF only, up to 10 MB';
+  fileName.textContent = file ? `${file.name} · ${(file.size / 1024 / 1024).toFixed(1)} MB` : 'PDF only, up to 4 MB';
   showMessage('');
 }
 
@@ -161,12 +161,17 @@ analyzeButton.addEventListener('click', async () => {
     fileInput.focus();
     return;
   }
-  if (!file.name.toLowerCase().endsWith('.pdf') || file.size > 10 * 1024 * 1024) {
-    showMessage('Choose a PDF file smaller than 10 MB.');
+  if (!file.name.toLowerCase().endsWith('.pdf') || file.size > 4 * 1024 * 1024) {
+    showMessage('Choose a PDF file 4 MB or smaller.');
     return;
   }
   if (!description) {
     showMessage('Add the job description so the resume can be matched to the role.');
+    jobDescription.focus();
+    return;
+  }
+  if (new TextEncoder().encode(description).length > 64 * 1024) {
+    showMessage('Keep the job description under 64 KB.');
     jobDescription.focus();
     return;
   }

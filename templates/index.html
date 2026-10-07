@@ -55,7 +55,7 @@
           <div class="workspace-grid">
             <section class="input-column" aria-labelledby="roleLabel">
               <label id="roleLabel" class="field-label" for="jobDescription">Job description</label>
-              <textarea id="jobDescription" rows="10" placeholder="Paste a job description or choose a domain starter above. You can edit the text before analyzing."></textarea>
+              <textarea id="jobDescription" rows="10" maxlength="65536" placeholder="Paste a job description or choose a domain starter above. You can edit the text before analyzing."></textarea>
               <p class="role-hint">Domain descriptions are editable examples. Matching uses the technical skills recognized by this app.</p>
               <div class="upload-area" id="dropZone">
                 <input id="resumeFile" type="file" accept=".pdf,application/pdf" />
@@ -63,7 +63,7 @@
                 <div class="upload-copy">
                   <label for="resumeFile" class="upload-link">Choose a PDF resume</label>
                   <span> or drop it here</span>
-                  <p id="fileName">PDF only, up to 10 MB</p>
+                  <p id="fileName">PDF only, up to 4 MB</p>
                 </div>
               </div>
               <div class="form-actions">

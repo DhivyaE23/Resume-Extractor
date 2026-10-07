@@ -15,7 +15,7 @@ from app.extractor import (
     extract_phone,
     extract_skills,
 )
-from app.main import MAX_RESUME_SIZE, app
+from app.main import MAX_JOB_DESCRIPTION_SIZE, MAX_RESUME_SIZE, app
 from app.matcher import calculate_match, find_skill_evidence
 from app.parser import extract_text_from_pdf
 from app.skills import find_skills
@@ -96,6 +96,16 @@ class ResumeApiTests(unittest.TestCase):
         )
         self.assertEqual(response.status_code, 400)
         self.assertIn("No recognized skills", response.json()["detail"])
+
+    def test_analyze_endpoint_enforces_job_description_size_limit(self):
+        pdf_path = Path(__file__).resolve().parents[1] / "resumes" / "professional_resume.pdf"
+        response = self.post(
+            "/analyze-resume",
+            files={"file": (pdf_path.name, pdf_path.read_bytes(), "application/pdf")},
+            data={"job_description": "x" * (MAX_JOB_DESCRIPTION_SIZE + 1)},
+        )
+        self.assertEqual(response.status_code, 413)
+        self.assertIn("64 KB", response.json()["detail"])
 
     def test_extract_endpoint_explains_when_pdf_has_no_selectable_text(self):
         document = pymupdf.open()
