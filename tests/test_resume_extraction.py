@@ -43,6 +43,12 @@ class ResumeApiTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), {"status": "ok"})
 
+    def test_homepage_uses_resume_extractor_branding(self):
+        response = self.get("/")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("Resume Extractor", response.text)
+        self.assertNotIn("CV Desk", response.text)
+
     def test_analyze_endpoint_returns_extraction_and_match_in_one_response(self):
         pdf_path = Path(__file__).resolve().parents[1] / "resumes" / "professional_resume.pdf"
         response = self.post(
