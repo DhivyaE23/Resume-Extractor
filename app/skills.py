@@ -16,6 +16,7 @@ SKILLS = {
         "Swift",
         "Kotlin",
         "R",
+        "MATLAB",
         "Scala",
     ],
     "Frontend Development": [
@@ -27,8 +28,10 @@ SKILLS = {
         "HTML",
         "CSS",
         "SASS",
+        "LESS",
         "Bootstrap",
         "Tailwind CSS",
+        "Material-UI",
         "jQuery",
     ],
     "Backend Development": [
@@ -42,6 +45,7 @@ SKILLS = {
         "ASP.NET",
         "Ruby on Rails",
         "Laravel",
+        "Symfony",
         "Nest.js",
     ],
     "Databases": [
@@ -53,6 +57,9 @@ SKILLS = {
         "SQLite",
         "Redis",
         "Elasticsearch",
+        "Cassandra",
+        "DynamoDB",
+        "Firebase",
     ],
     "Data Science & ML": [
         "Machine Learning",
@@ -79,41 +86,65 @@ SKILLS = {
         "Docker",
         "Kubernetes",
         "Jenkins",
+        "GitLab CI",
         "GitHub Actions",
+        "CircleCI",
         "Terraform",
         "Ansible",
+        "CloudFormation",
     ],
     "Tools & Platforms": [
         "Git",
         "GitHub",
         "GitLab",
+        "Bitbucket",
         "Linux",
         "Windows",
+        "macOS",
         "Unix",
         "Jira",
         "Confluence",
+        "Slack",
         "Postman",
     ],
-    "Visualization & BI": [
+    "Big Data & Visualization": [
+        "Spark",
+        "Hadoop",
+        "Hive",
         "Power BI",
         "Tableau",
-        "Excel",
         "Looker",
+        "Excel",
         "Google Analytics",
+        "Grafana",
+    ],
+    "Mobile Development": [
+        "React Native",
+        "Flutter",
+        "iOS",
+        "Android",
+        "Xamarin",
+        "Ionic",
     ],
     "Testing & QA": [
         "Selenium",
+        "JUnit",
         "pytest",
         "Jest",
         "Cypress",
+        "Postman",
+        "LoadRunner",
         "Manual Testing",
         "Automation Testing",
     ],
     "Other Skills": [
         "REST API",
         "GraphQL",
+        "WebSocket",
         "Microservices",
         "System Design",
+        "SOLID Principles",
+        "Design Patterns",
         "Agile",
         "Scrum",
         "Kanban",
@@ -124,5 +155,5 @@ FLAT_SKILLS = []
 for category_skills in SKILLS.values():
     FLAT_SKILLS.extend(category_skills)
 
-FLAT_SKILLS = list(dict.fromkeys(FLAT_SKILLS))
+FLAT_SKILLS = list(set(FLAT_SKILLS))
 FLAT_SKILLS.sort()
