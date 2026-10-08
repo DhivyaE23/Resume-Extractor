@@ -23,7 +23,8 @@ For image-only scanned PDFs, OCR is attempted only when Tesseract is installed a
 - Candidate name, email address, and phone number extraction
 - Technical skill detection with token boundaries and common aliases such as HTML5/HTML and CSS3/CSS
 - Education and experience extraction guided by resume section headings
-- Organization extraction and date extraction with nearby resume context and section labels
+- Organization extraction recognizes company and institution names such as analytics companies and colleges of engineering
+- Date extraction includes the nearby resume text and detected section (such as Experience or Education) with each date
 - Skill matching against a pasted job description
 - Domain starter descriptions can be loaded into the job-description editor and customized before analysis
 - Standalone extraction and matching APIs, plus a combined analysis endpoint
@@ -98,7 +99,9 @@ Open `http://127.0.0.1:8000/`. Interactive API documentation is at `http://127.0
 
 Upload endpoints require a PDF file. Matching endpoints require a non-empty job description containing at least one recognized skill. Errors include unsupported file type, oversized file, unreadable PDF, and no recognized job skills.
 
-Extracted `dates` are returned as entries with `date`, `context`, and `section` fields. Context is taken from the date's line or nearby resume lines; `section` is `Experience`, `Education`, another detected section, or `null` when no section is recognized.
+The profile response returns `dates` as entries with `date`, `context`, and `section` fields. Context comes from the same line as the date or nearby resume lines when the date appears alone. `section` identifies the detected resume section, such as `Experience` or `Education`, and is `null` when no section is recognized.
+
+The `organizations` field is a list of company and educational institution names detected from the experience and education sections when available. Organization detection uses name patterns and named-entity recognition, so review the results for accuracy.
 
 ## Run Tests
 
