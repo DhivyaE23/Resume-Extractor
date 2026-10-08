@@ -7,6 +7,7 @@ import httpx
 import pymupdf
 
 from app.extractor import (
+    extract_dates,
     extract_education,
     extract_email,
     extract_experience,
@@ -123,6 +124,54 @@ class ResumeApiTests(unittest.TestCase):
 
 
 class ResumeExtractionTests(unittest.TestCase):
+    def test_dates_include_inline_context_and_resume_section(self):
+        dates = extract_dates(
+            """PROFESSIONAL EXPERIENCE
+Software Engineer | Vertex Tech Solutions | Jan 2021 - Present
+EDUCATION
+B.S. in Computer Science | 2017–2021"""
+        )
+
+        self.assertEqual(
+            dates,
+            [
+                {
+                    "date": "Jan 2021 - Present",
+                    "context": "Software Engineer Vertex Tech Solutions",
+                    "section": "Experience",
+                },
+                {
+                    "date": "2017–2021",
+                    "context": "B.S. in Computer Science",
+                    "section": "Education",
+                },
+            ],
+        )
+
+    def test_date_only_line_uses_neighboring_resume_context(self):
+        dates = extract_dates(
+            """EXPERIENCE
+Software Engineer
+Vertex Tech Solutions
+2020 - 2023"""
+        )
+
+        self.assertEqual(
+            dates,
+            [
+                {
+                    "date": "2020 - 2023",
+                    "context": "Vertex Tech Solutions / Software Engineer",
+                    "section": "Experience",
+                }
+            ],
+        )
+
+    def test_date_extraction_does_not_return_years_from_date_ranges_twice(self):
+        dates = extract_dates("EDUCATION\nB.S. Computer Science | 2019 - 2023")
+
+        self.assertEqual([entry["date"] for entry in dates], ["2019 - 2023"])
+
     def test_match_evidence_returns_source_line_and_normalizes_alias(self):
         evidence = find_skill_evidence(
             "Skills: HTML5, CSS3\nBuilt accessible pages with HTML5 and CSS3.",
@@ -222,6 +271,19 @@ HSC, Udhayaam Matric Hr Sec School, Mathur 2023 | Percentage: 84.8%
 """
         self.assertIn("Udhayaam Matric Hr Sec School", extract_organizations(text))
 
+    def test_organization_suffixes_preserve_education_and_analytics_names(self):
+        text = """EXPERIENCE
+Data Analyst
+Nova Cloud Analytics
+EDUCATION
+Adhiyamaan College of Engineering
+"""
+
+        organizations = extract_organizations(text)
+
+        self.assertIn("Nova Cloud Analytics", organizations)
+        self.assertIn("Adhiyamaan College of Engineering", organizations)
+
     def test_bundled_professional_resume_extracts_header_and_section_data(self):
         pdf_path = Path(__file__).resolve().parents[1] / "resumes" / "professional_resume.pdf"
         text = extract_text_from_pdf(str(pdf_path))
@@ -235,6 +297,7 @@ HSC, Udhayaam Matric Hr Sec School, Mathur 2023 | Percentage: 84.8%
         self.assertTrue(any("Senior Software Engineer" in item for item in extract_experience(text)))
         organizations = extract_organizations(text)
         self.assertIn("Vertex Tech Solutions", organizations)
+        self.assertIn("Nova Cloud Analytics", organizations)
         self.assertIn("State University of Technology", organizations)
 
 

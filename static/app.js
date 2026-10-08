@@ -70,6 +70,28 @@ function renderEvidence(container, evidence) {
   });
 }
 
+function renderDates(container, dates) {
+  container.replaceChildren();
+  if (!dates?.length) {
+    const empty = document.createElement('li');
+    empty.className = 'empty-note';
+    empty.textContent = 'No dates found';
+    container.append(empty);
+    return;
+  }
+
+  dates.forEach(({ date, context, section }) => {
+    const item = document.createElement('li');
+    item.className = 'timeline-entry';
+    const dateLabel = document.createElement('strong');
+    dateLabel.textContent = date;
+    const contextLabel = document.createElement('span');
+    contextLabel.textContent = [section, context].filter(Boolean).join(' · ') || 'Context not found';
+    item.append(dateLabel, contextLabel);
+    container.append(item);
+  });
+}
+
 function showMessage(text = '') {
   message.textContent = text;
   message.hidden = !text;
@@ -129,7 +151,7 @@ function renderDetails(data) {
   document.getElementById('resultName').textContent = data.name || 'Not found';
   document.getElementById('resultEmail').textContent = data.email || 'Not found';
   document.getElementById('resultPhone').textContent = data.phone || 'Not found';
-  document.getElementById('resultDates').textContent = data.dates?.join(', ') || 'Not found';
+  renderDates(document.getElementById('resultDates'), data.dates);
   document.getElementById('resultFilename').textContent = data.filename;
 
   renderValues(document.getElementById('resultSkills'), data.skills, 'skill-tag', 'No listed skills found');

@@ -38,7 +38,7 @@ NAME_EXCLUSIONS = {
 }
 ORGANIZATION_SUFFIX_PATTERN = re.compile(
     r"\b(?:Pvt\.?\s+Ltd\.?|Limited|Ltd\.?|LLC|Inc\.?|Corporation|Corp\.?|Foundation|"
-    r"University|College|School|Institute|Solutions|Technologies|Technology|Systems|Labs|Group)\b",
+    r"University|College|School|Institute|Solutions|Technologies|Technology|Systems|Labs|Group|Analytics)\b",
     re.IGNORECASE,
 )
 ORGANIZATION_EXCLUSIONS = {
@@ -155,18 +155,70 @@ def extract_skills(text: str) -> list[str]:
     return find_skills(text)
 
 
-def extract_dates(text: str) -> list[str]:
-    patterns = [
-        r"\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+\d{4}\b",
-        r"\b\d{1,2}[/-]\d{4}\b",
-        r"\b\d{4}\s*[-–—]\s*(?:\d{4}|Present|Current)\b",
-        r"\b\d{4}\b",
-    ]
+MONTH_DATE_PATTERN = r"(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)[a-z]*\.?\s+\d{4}"
+NUMERIC_DATE_PATTERN = r"\d{1,2}[/-]\d{4}"
+YEAR_PATTERN = r"(?:19|20)\d{2}"
+DATE_PATTERN = re.compile(
+    rf"\b(?:"
+    rf"{MONTH_DATE_PATTERN}\s*[-–—]\s*(?:{MONTH_DATE_PATTERN}|{YEAR_PATTERN}|Present|Current)"
+    rf"|{YEAR_PATTERN}\s*[-–—]\s*(?:{MONTH_DATE_PATTERN}|{YEAR_PATTERN}|Present|Current)"
+    rf"|{MONTH_DATE_PATTERN}|{NUMERIC_DATE_PATTERN}|{YEAR_PATTERN}"
+    rf")\b",
+    re.IGNORECASE,
+)
+
+
+def _date_context(lines: list[str], index: int, line_context: str) -> str:
+    if line_context:
+        return line_context
+
+    for direction in (-1, 1):
+        nearby = []
+        for distance in (1, 2):
+            neighbor_index = index + direction * distance
+            if not 0 <= neighbor_index < len(lines):
+                break
+            neighbor = _clean_line(lines[neighbor_index])
+            if _heading_category(neighbor) is not None:
+                break
+            if neighbor and not DATE_PATTERN.search(neighbor):
+                nearby.append(neighbor)
+        if nearby:
+            return " / ".join(nearby)
+    return ""
+
+
+def extract_dates(text: str) -> list[dict[str, str | None]]:
+    lines = text.splitlines()
     dates = []
-    for pattern in patterns:
-        for match in re.findall(pattern, text, re.IGNORECASE):
-            if match not in dates:
-                dates.append(match)
+    section = None
+
+    for index, raw_line in enumerate(lines):
+        line = _clean_line(raw_line)
+        if not line:
+            continue
+
+        heading = _heading_category(line)
+        if heading is not None:
+            section = heading.title()
+            continue
+
+        matches = list(DATE_PATTERN.finditer(line))
+        if not matches:
+            continue
+
+        line_context = DATE_PATTERN.sub(" ", line)
+        line_context = re.sub(r"[\s|,;:–—-]+", " ", line_context).strip()
+        context = _date_context(lines, index, line_context)
+        for match in matches:
+            entry = {
+                "date": match.group(0),
+                "context": context or None,
+                "section": section,
+            }
+            if entry not in dates:
+                dates.append(entry)
+
     return dates
 
 
@@ -199,12 +251,18 @@ def extract_organizations(text: str) -> list[str]:
 
     organizations = []
 
-    def add_organization(value: str) -> None:
+    def add_organization(value: str, *, has_organization_suffix: bool = False) -> None:
         value = _clean_line(value)
         words = re.findall(r"[a-zA-Z]+", value)
         if len(words) < 2 or find_skills(value):
             return
-        if any(word.lower() in ORGANIZATION_EXCLUSIONS for word in words):
+        excluded_words = {word.lower() for word in words} & ORGANIZATION_EXCLUSIONS
+        institutional_engineering = (
+            has_organization_suffix
+            and excluded_words == {"engineering"}
+            and re.search(r"\b(?:college|university|school|institute)\b.*\bengineering\b", value, re.I)
+        )
+        if excluded_words and not institutional_engineering:
             return
         if value.casefold() not in {item.casefold() for item in organizations}:
             organizations.append(value)
@@ -227,7 +285,13 @@ def extract_organizations(text: str) -> list[str]:
                     if extension:
                         candidate += extension.group(0)
                 candidate = re.sub(r"^(?:HSC|SSLC|SSC),\s*", "", candidate, flags=re.IGNORECASE)
-                add_organization(candidate)
+                candidate = re.sub(
+                    r"^(?:B\.?\s*Tech|B\.?\s*E\.?|M\.?\s*Tech|Bachelors?|Masters?)[^,]*,\s*",
+                    "",
+                    candidate,
+                    flags=re.IGNORECASE,
+                )
+                add_organization(candidate, has_organization_suffix=True)
 
     for line, document in zip(context_lines, nlp.pipe(context_lines)):
         for entity in document.ents:

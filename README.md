@@ -23,7 +23,7 @@ For image-only scanned PDFs, OCR is attempted only when Tesseract is installed a
 - Candidate name, email address, and phone number extraction
 - Technical skill detection with token boundaries and common aliases such as HTML5/HTML and CSS3/CSS
 - Education and experience extraction guided by resume section headings
-- Organization and date extraction
+- Organization extraction and date extraction with nearby resume context and section labels
 - Skill matching against a pasted job description
 - Domain starter descriptions can be loaded into the job-description editor and customized before analysis
 - Standalone extraction and matching APIs, plus a combined analysis endpoint
@@ -98,6 +98,8 @@ Open `http://127.0.0.1:8000/`. Interactive API documentation is at `http://127.0
 
 Upload endpoints require a PDF file. Matching endpoints require a non-empty job description containing at least one recognized skill. Errors include unsupported file type, oversized file, unreadable PDF, and no recognized job skills.
 
+Extracted `dates` are returned as entries with `date`, `context`, and `section` fields. Context is taken from the date's line or nearby resume lines; `section` is `Experience`, `Education`, another detected section, or `null` when no section is recognized.
+
 ## Run Tests
 
 Run the extraction, matching, and API regression tests from the project root:
@@ -121,4 +123,3 @@ The Hobby plan is Vercel's free tier for eligible personal projects; review Verc
 ## Privacy and Repository Hygiene
 
 Uploads are processed from temporary files and removed after text extraction; this application does not retain resumes in a database. Use HTTPS in production and do not commit candidate resumes, job descriptions containing private data, or environment secrets. Local resume PDFs and `job_description.txt` are excluded by `.gitignore`.
-
